@@ -292,6 +292,18 @@
     (define-key map (kbd "C-c   ;") #'gauche-mode-toggle-datum-comment)
     map))
 
+(defun gauche-complete-at-point ()
+  "Complete the scheme symbol at point."
+  ;; XXX: This is pretty rudimentary.
+  (pcase-let ((`(,beg . ,end)
+                (or (bounds-of-thing-at-point 'symbol)
+                    (cons (point) (point)))))
+     (when (eq (char-after beg) ?')
+       (setq beg (1+ beg)
+             end (max beg end)))
+     `( ,beg ,end
+        ,(gauche-mode-info-candidates))))
+
 ;;;###autoload
 (define-derived-mode gauche-mode scheme-mode
   "Gauche" "Major mode for Gauche."
@@ -312,7 +324,9 @@
            . gauche-font-lock-syntactic-face-function)
           ))
   (setq-local syntax-propertize-function #'gauche-syntax-propertize)
-  )
+  (add-hook 'completion-at-point-functions
+            #'gauche-complete-at-point
+            nil t))
 
 (defun gauche-mode-last-sexp ()
   (save-excursion
